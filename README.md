@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Secret Market Creator
 
-## Getting Started
+Create Manifold markets with hidden resolution criteria. This allows for creating markets where knowing the resolution criteria would affect betting behavior.
 
-First, run the development server:
+## Features
 
+- Create markets with encrypted resolution criteria
+- View your secret criteria privately
+- Reveal criteria publicly when ready
+- Secure encryption using your API key
+- Proof of criteria via SHA-256 hash
+
+## Setup
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Set up environment variables:
+Create a `.env` file with:
+```
+MONGODB_URI=your_mongodb_connection_string
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage
 
-## Learn More
+1. Get your Manifold API key from your profile settings
+2. Create a market:
+   - Enter your API key
+   - Provide a market title
+   - Enter the secret resolution criteria
+   - Click "Create Secret Market"
 
-To learn more about Next.js, take a look at the following resources:
+3. Managing your market:
+   - Use "View Secret Description" to privately check the criteria
+   - Use "Reveal Publicly" when ready to make the criteria public
+   - The criteria hash proves the criteria wasn't changed
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Security
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Resolution criteria are encrypted using AES-256
+- Your API key is used as the encryption key
+- Criteria are never stored in plaintext
+- Hashes provide proof of unchanged criteria
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Built with:
+- Next.js 13 App Router
+- MongoDB for secure storage
+- CryptoJS for encryption
+- Tailwind CSS for styling
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
