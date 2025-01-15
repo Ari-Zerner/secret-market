@@ -13,6 +13,12 @@ export default function Home() {
     return '';
   });
   const [description, setDescription] = useState('');
+  const [closeTime, setCloseTime] = useState(() => {
+    // Default to one week from now
+    const oneWeekFromNow = new Date();
+    oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+    return oneWeekFromNow.toISOString().slice(0, 16); // Format: "YYYY-MM-DDThh:mm"
+  });
   const [marketUrl, setMarketUrl] = useState('');
   const [error, setError] = useState('');
 
@@ -28,6 +34,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           description,
+          closeTime,
           apiKey
         }),
       });
@@ -94,6 +101,22 @@ export default function Home() {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 onBlur={(e) => localStorage.setItem('manifoldApiKey', e.target.value)}
+                className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1.5">
+                Close Time
+                <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
+                  (when betting will end)
+                </span>
+              </label>
+              <input
+                type="datetime-local"
+                value={closeTime}
+                onChange={(e) => setCloseTime(e.target.value)}
                 className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 required
               />

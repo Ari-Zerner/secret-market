@@ -43,9 +43,19 @@ UI Guidelines:
   ```
 
 Next.js App Router Guidelines:
+- Log all Manifold API errors with endpoint, status, error, and error.details
+- Use ManifoldAPIError type for error responses: { message: string; details?: { [key: string]: unknown } }
+- Use absolute imports from app directory with @/app prefix, e.g. '@/app/lib/db/types'
 - Pass through API error messages for easier debugging
 - Use useParams() hook instead of props.params in client components
 - For server components, use React.use(params) to unwrap params promise
 - Keep route handlers (app/api/*) as server-side code
-- In route handlers, await params before accessing properties: `await params.id`
-- In route handlers, await params before accessing properties: `await params.id`
+- Route handlers:
+  ```ts
+  // In app/api/[param]/route.ts
+  export async function GET(request: NextRequest) {
+    // Get dynamic param from URL
+    const { param } = request.nextUrl.pathname.match(/\/api\/(?<param>[^\/]+)/)?.groups ?? {};
+    // Handler code
+  }
+  ```

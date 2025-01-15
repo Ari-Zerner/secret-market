@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { ManifoldAPIError } from '@/app/lib/db/types';
 import CryptoJS from 'crypto-js';
 import clientPromise from '@/app/lib/db/mongodb';
 import type { StoredMarket } from '@/app/lib/db/types';
 
 export async function POST(req: NextRequest) {
   try {
-    const { description, apiKey } = await req.json();
+    const { description, apiKey, closeTime } = await req.json();
 
     if (!apiKey) {
       return NextResponse.json(
@@ -29,7 +30,29 @@ export async function POST(req: NextRequest) {
 
     // Create market description
     const baseUrl = req.headers.get('host') || 'Secret Market Creator';
-    const marketDescription = `This market has a secret resolution criteria. The SHA256 hash of the resolution criteria is ${descriptionHash}.\n\nCreated with https://${baseUrl}`;
+    const descriptionJson = JSON.stringify({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: `The SHA256 hash of this market's resolution criteria is ${descriptionHash}.`
+            }
+          ]
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: `Created with https://${baseUrl}`
+            }
+          ]
+        }
+      ]
+    });
 
     // Call Manifold API to create market
     const manifoldResponse = await fetch('https://api.manifold.markets/v0/market', {
@@ -41,13 +64,21 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         outcomeType: 'BINARY',
         question: marketTitle,
-        description: marketDescription,
-        initialProb: 50
+        descriptionJson,
+        initialProb: 50,
+        closeTime: new Date(closeTime).getTime(),
+        visibility: 'unlisted'
       })
     });
 
     if (!manifoldResponse.ok) {
       const error = await manifoldResponse.json();
+      console.error('Manifold API error:', {
+        endpoint: '/market',
+        status: manifoldResponse.status,
+        error,
+        details: (error as ManifoldAPIError).details
+      });
       return NextResponse.json(
         { error: `Manifold API error: ${error.message || JSON.stringify(error)}` },
         { status: manifoldResponse.status }

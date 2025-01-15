@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { ManifoldAPIError } from '@/app/lib/db/types';
 import CryptoJS from 'crypto-js';
 import clientPromise from '@/app/lib/db/mongodb';
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest
 ) {
+  const { id } = request.nextUrl.pathname.match(/\/market\/(?<id>[^\/]+)/)?.groups ?? {};
   try {
-    const id = params.id;
-    const apiKey = req.headers.get('x-api-key');
+    const apiKey = request.headers.get('x-api-key');
 
     const mongoClient = await clientPromise;
     const db = mongoClient.db('secret-market');
-    
+
     const market = await db.collection('markets').findOne({ id: id });
-    
+
     if (!market) {
       return NextResponse.json(
         { error: 'Market not found' },
@@ -24,10 +24,9 @@ export async function GET(
 
     // If API key is provided, decrypt and return description
     if (apiKey) {
-      try {
-        const bytes = CryptoJS.AES.decrypt(market.encryptedDescription, apiKey);
+      const bytes = CryptoJS.AES.decrypt(market.encryptedDescription, apiKey);
         const description = bytes.toString(CryptoJS.enc.Utf8);
-        
+
         if (!description) {
           return NextResponse.json(
             { error: 'Invalid API key' },
@@ -36,12 +35,6 @@ export async function GET(
         }
 
         return NextResponse.json({ description });
-      } catch (error) {
-        return NextResponse.json(
-          { error: 'Invalid API key' },
-          { status: 401 }
-        );
-      }
     }
 
     // Otherwise just return public info
@@ -52,7 +45,10 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error revealing market:', error);
+    console.error('Error revealing market:', error instanceof Error ? {
+      message: error.message,
+      details: (error as ManifoldAPIError).details
+    } : error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -61,11 +57,11 @@ export async function GET(
 }
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest
 ) {
+  const { id } = request.nextUrl.pathname.match(/\/market\/(?<id>[^\/]+)/)?.groups ?? {};
   try {
-    const { apiKey } = await req.json();
+    const { apiKey } = await request.json();
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Missing API key' },
@@ -75,9 +71,9 @@ export async function POST(
 
     const mongoClient = await clientPromise;
     const db = mongoClient.db('secret-market');
-    
-    const market = await db.collection('markets').findOne({ id: await params.id });
-    
+
+    const market = await db.collection('markets').findOne({ id });
+
     if (!market) {
       return NextResponse.json(
         { error: 'Market not found' },
@@ -87,7 +83,8 @@ export async function POST(
 
     // Rest of the function stays the same...
   } catch (error) {
-    console.error('Error revealing market:', error);
+    console.error('Error revealing market:', error, {          details: (error as ManifoldAPIError).details
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
