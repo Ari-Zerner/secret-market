@@ -4,6 +4,7 @@ import { useState } from 'react';
 import CryptoJS from 'crypto-js';
 import type { ManifoldAPIError } from '@/app/lib/db/types';
 import { useRouter } from 'next/navigation';
+import { APP_NAME, MANIFOLD_API_BASE } from './lib/constants';
 
 export default function Home() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function Home() {
       });
 
       // Call Manifold API to create market
-      const manifoldResponse = await fetch('https://api.manifold.markets/v0/market', {
+      const manifoldResponse = await fetch(`${MANIFOLD_API_BASE}/market`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ export default function Home() {
   return (
     <div className="min-h-screen p-6 md:p-8 max-w-3xl mx-auto">
       <header className="mb-10 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold mb-3">Secret Market Creator</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-3">{APP_NAME}</h1>
         <p className="text-gray-900 dark:text-gray-100 max-w-xl mx-auto leading-relaxed">
           Create Manifold markets with hidden resolution criteria.
         </p>

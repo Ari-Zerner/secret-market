@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { MANIFOLD_API_BASE } from '@/app/lib/constants';
 import CryptoJS from 'crypto-js';
 import type { ManifoldAPIError } from '@/app/lib/db/types';
 
@@ -64,7 +65,7 @@ export default function MarketPage() {
         }
         const dbData = await dbResponse.json();
 
-        const manifoldResponse = await fetch(`https://api.manifold.markets/v0/market/${marketId}`);
+        const manifoldResponse = await fetch(`${MANIFOLD_API_BASE}/market/${marketId}`);
         if (!manifoldResponse.ok) {
           const errorData = await manifoldResponse.json();
           console.error('Manifold API error:', {
@@ -258,7 +259,7 @@ export default function MarketPage() {
                       setActionError('');
 
                       // Resolve the market
-                      const resolveResponse = await fetch(`https://api.manifold.markets/v0/market/${market.id}/resolve`, {
+                      const resolveResponse = await fetch(`${MANIFOLD_API_BASE}/market/${market.id}/resolve`, {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
@@ -283,7 +284,7 @@ export default function MarketPage() {
 
                       // If user wants to reveal description, do that too
                       if (revealDescription && revealedDescription) {
-                        const commentResponse = await fetch(`https://api.manifold.markets/v0/comment`, {
+                        const commentResponse = await fetch(`${MANIFOLD_API_BASE}/comment`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
