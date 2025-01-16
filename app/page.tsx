@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import CryptoJS from 'crypto-js';
+import type { ManifoldAPIError } from '@/app/lib/db/types';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
@@ -27,25 +29,88 @@ export default function Home() {
     setError('');
 
     try {
-      const response = await fetch('/api/market', {
+      // Generate hash of the description
+      const descriptionHash = CryptoJS.SHA256(description).toString();
+
+      // Create market title with hash
+      const marketTitle = `Secret Market ${descriptionHash.substring(0, 8)}`;
+
+      // Create market description
+      const descriptionJson = JSON.stringify({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: `The SHA256 hash of this market's resolution criteria is ${descriptionHash}.`
+              }
+            ]
+          },
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: `Created with ${window.location.origin}`
+              }
+            ]
+          }
+        ]
+      });
+
+      // Call Manifold API to create market
+      const manifoldResponse = await fetch('https://api.manifold.markets/v0/market', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Key ${apiKey}`
+        },
+        body: JSON.stringify({
+          outcomeType: 'BINARY',
+          question: marketTitle,
+          descriptionJson,
+          initialProb: 50,
+          closeTime: new Date(closeTime).getTime(),
+          visibility: 'unlisted'
+        })
+      });
+
+      if (!manifoldResponse.ok) {
+        const error = await manifoldResponse.json();
+        console.error('Manifold API error:', {
+          endpoint: '/market',
+          status: manifoldResponse.status,
+          error,
+          details: (error as ManifoldAPIError).details
+        });
+        throw new Error(`Manifold API error: ${error.message || JSON.stringify(error)}`);
+      }
+
+      const market = await manifoldResponse.json();
+
+      // Encrypt the description with the API key
+      const encryptedDescription = CryptoJS.AES.encrypt(description, apiKey).toString();
+
+      // Store only the encrypted data in MongoDB
+      const dbResponse = await fetch('/api/market', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          description,
-          closeTime,
-          apiKey
+          id: market.id,
+          encryptedDescription,
+          descriptionHash
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create market');
+      if (!dbResponse.ok) {
+        throw new Error('Failed to store market data');
       }
 
-      router.push(`/market/${data.id}`);
+      router.push(`/market/${market.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
@@ -180,7 +245,7 @@ export default function Home() {
               <li>Enter your market details and secret resolution criteria</li>
               <li>We create a hash of your resolution criteria</li>
               <li>A market is created on Manifold (with you as the creator) with the hash as proof</li>
-              <li>We store the resolution criteria securely, encrypted with your API key</li>
+              <li>We store the resolution criteria securely, encrypted in-browser with your API key</li>
               <li>When ready, you can reveal the criteria and resolve the market</li>
             </ol>
           </div>

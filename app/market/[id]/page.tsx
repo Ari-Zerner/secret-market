@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import CryptoJS from 'crypto-js';
 import type { ManifoldAPIError } from '@/app/lib/db/types';
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -193,18 +194,26 @@ export default function MarketPage() {
                 <button
                   onClick={async () => {
                     try {
-                      const response = await fetch(`/api/market/${market.id}`, {
-                        headers: {
-                          'x-api-key': apiKey
-                        }
-                      });
+                      const response = await fetch(`/api/market/${market.id}`);
 
                       if (!response.ok) {
-                        throw new Error('Failed to reveal description');
+                        throw new Error('Failed to fetch market data');
                       }
 
                       const data = await response.json();
-                      setRevealedDescription(data.description);
+                      
+                      try {
+                        const bytes = CryptoJS.AES.decrypt(data.encryptedDescription, apiKey);
+                        const description = bytes.toString(CryptoJS.enc.Utf8);
+                        
+                        if (!description) {
+                          throw new Error('Invalid API key');
+                        }
+                        
+                        setRevealedDescription(description);
+                      } catch (err) {
+                        throw new Error(err instanceof Error ? err.message : 'Failed to decrypt description - invalid API key');
+                      }
                     } catch (err) {
                       setActionError(err instanceof Error ? err.message : 'Failed to reveal description');
                     }

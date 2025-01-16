@@ -19,6 +19,10 @@ Manifold API endpoints used:
    - Database connection string should be provided in MONGODB_URI environment variable
    - Database is source of truth for whether a market is a secret market
    - Manifold API only used for supplementary market info (title, URL)
+   - All encryption, decryption, and Manifold API calls done client-side
+   - Server only stores and transmits encrypted data
+   - API keys never leave the browser
+   - Plaintext resolution criteria never transmitted over the network
 4. ✓ Add frontend options to reveal the original market description to the user and to reveal the market outcome publicly by editing the market description.
    - Added "View Secret Description" button to privately view criteria
    - Added "Reveal Publicly" button with confirmation dialog
