@@ -22,7 +22,8 @@ export async function GET(
     return NextResponse.json({
       id: market.id,
       encryptedDescription: market.encryptedDescription,
-      descriptionHash: market.descriptionHash
+      descriptionHash: market.descriptionHash,
+      encryptedPassword: market.encryptedPassword
     });
 
   } catch (error) {

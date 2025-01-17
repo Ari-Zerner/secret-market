@@ -4,7 +4,7 @@ import type { StoredMarket } from '@/app/lib/db/types';
 
 export async function POST(req: NextRequest) {
   try {
-    const { id, encryptedDescription, descriptionHash } = await req.json();
+    const { id, encryptedDescription, descriptionHash, encryptedPassword } = await req.json();
 
     if (!id || !encryptedDescription || !descriptionHash) {
       return NextResponse.json(
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       id,
       encryptedDescription,
       descriptionHash,
+      ...(encryptedPassword && { encryptedPassword }),
       createdAt: new Date()
     };
 

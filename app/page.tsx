@@ -24,6 +24,7 @@ export default function Home() {
   });
   const [marketUrl, setMarketUrl] = useState('');
   const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
 
   const createMarket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +37,32 @@ export default function Home() {
       // Create market title with hash
       const marketTitle = `Secret Market ${descriptionHash.substring(0, 8)}`;
 
+      // Encrypt the description with the password or API key
+      const encryptionKey = password || apiKey;
+      const encryptedDescription = CryptoJS.AES.encrypt(description, encryptionKey).toString();
+
       // Create market description
-      const descriptionJson = JSON.stringify({
-        type: 'doc',
-        content: [
+      const descriptionContent = [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: `The SHA256 hash of this market's resolution criteria is ${descriptionHash}.`
+            }
+          ]
+        }
+      ];
+
+      if (password) {
+        // If using password, include the encrypted description in the market description
+        descriptionContent.push(
           {
             type: 'paragraph',
             content: [
               {
                 type: 'text',
-                text: `The SHA256 hash of this market's resolution criteria is ${descriptionHash}.`
+                text: 'Resolution criteria (AES encrypted): ' + encryptedDescription
               }
             ]
           },
@@ -54,11 +71,26 @@ export default function Home() {
             content: [
               {
                 type: 'text',
-                text: `Created with ${window.location.origin}`
+                text: 'To decrypt: Use CryptoJS.AES.decrypt(ciphertext, password).toString(CryptoJS.enc.Utf8)'
               }
             ]
           }
+        );
+      }
+
+      descriptionContent.push({
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: `Created with ${window.location.origin}`
+          }
         ]
+      });
+
+      const descriptionJson = JSON.stringify({
+        type: 'doc',
+        content: descriptionContent
       });
 
       // Call Manifold API to create market
@@ -91,10 +123,12 @@ export default function Home() {
 
       const market = await manifoldResponse.json();
 
-      // Encrypt the description with the API key
-      const encryptedDescription = CryptoJS.AES.encrypt(description, apiKey).toString();
+      // If using password, encrypt it with API key for storage
+      const encryptedPassword = password 
+        ? CryptoJS.AES.encrypt(password, apiKey).toString()
+        : undefined;
 
-      // Store only the encrypted data in MongoDB
+      // Store the encrypted data in MongoDB
       const dbResponse = await fetch('/api/market', {
         method: 'POST',
         headers: {
@@ -103,7 +137,8 @@ export default function Home() {
         body: JSON.stringify({
           id: market.id,
           encryptedDescription,
-          descriptionHash
+          descriptionHash,
+          encryptedPassword
         }),
       });
 
@@ -169,6 +204,22 @@ export default function Home() {
                 onBlur={(e) => localStorage.setItem('manifoldApiKey', e.target.value)}
                 className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1.5">
+                Optional Password
+                <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
+                  (for decrypting resolution criteria)
+                </span>
+              </label>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                placeholder="Leave blank to use API key"
               />
             </div>
 

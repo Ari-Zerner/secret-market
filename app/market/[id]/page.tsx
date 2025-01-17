@@ -36,6 +36,8 @@ export default function MarketPage() {
     }
     return '';
   });
+  const [password, setPassword] = useState('');
+
   const [actionError, setActionError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [market, setMarket] = useState<{
@@ -46,6 +48,7 @@ export default function MarketPage() {
     isResolved: boolean;
     resolution?: 'YES' | 'NO' | 'MKT' | 'CANCEL';
     resolutionProbability?: number;
+    encryptedPassword?: string;
   } | null>(null);
   const [revealedDescription, setRevealedDescription] = useState<string>('');
 
@@ -86,7 +89,8 @@ export default function MarketPage() {
             manifoldUrl: manifoldData.url,
             isResolved: manifoldData.isResolved,
             resolution: manifoldData.resolution,
-            resolutionProbability: manifoldData.resolutionProbability
+            resolutionProbability: manifoldData.resolutionProbability,
+            encryptedPassword: dbData.encryptedPassword
           });
         }
       } catch (err) {
@@ -171,22 +175,68 @@ export default function MarketPage() {
               <h2 className="text-lg font-semibold mb-3 dark:text-gray-100">Market Actions</h2>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">
-                    Manifold API Key
-                    <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
-                      (required for market actions)
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    value={apiKey}
-                    onChange={(e) => {
-                      setApiKey(e.target.value);
-                      localStorage.setItem('manifoldApiKey', e.target.value);
-                    }}
-                    className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold mb-1.5">
+                      Manifold API Key
+                      <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
+                        (required for resolving market)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={apiKey}
+                      onChange={(e) => {
+                        setApiKey(e.target.value);
+                        localStorage.setItem('manifoldApiKey', e.target.value);
+                        setActionError('');
+                      }}
+                      className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    />
+                    {market.encryptedPassword && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            const bytes = CryptoJS.AES.decrypt(market.encryptedPassword!, apiKey);
+                            const decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
+                            if (!decryptedPassword) {
+                              throw new Error('Failed to decrypt password');
+                            }
+                            setPassword(decryptedPassword);
+                            setActionError('');
+                          } catch (err) {
+                            setActionError('Failed to recover password with API key');
+                          }
+                        }}
+                        className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        Recover password with API key
+                      </button>
+                    )}
+                  </div>
+
+                  {market.encryptedPassword && (
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5">
+                        Password
+                        <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
+                          (for viewing resolution criteria)
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setActionError('');
+                        }}
+                        className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="Enter password to decrypt"
+                      />
+                    </div>
+                  )}
+
                   {actionError && (
                     <p className="mt-2 text-sm text-red-600 dark:text-red-400">{actionError}</p>
                   )}
@@ -204,22 +254,23 @@ export default function MarketPage() {
                       const data = await response.json();
                       
                       try {
-                        const bytes = CryptoJS.AES.decrypt(data.encryptedDescription, apiKey);
+                        const decryptionKey = data.encryptedPassword ? password : apiKey;
+                        const bytes = CryptoJS.AES.decrypt(data.encryptedDescription, decryptionKey);
                         const description = bytes.toString(CryptoJS.enc.Utf8);
                         
                         if (!description) {
-                          throw new Error('Invalid API key');
+                          throw new Error(data.encryptedPassword ? 'Invalid password' : 'Invalid API key');
                         }
                         
                         setRevealedDescription(description);
                       } catch (err) {
-                        throw new Error(err instanceof Error ? err.message : 'Failed to decrypt description - invalid API key');
+                        throw new Error(err instanceof Error ? err.message : 'Failed to decrypt description');
                       }
                     } catch (err) {
                       setActionError(err instanceof Error ? err.message : 'Failed to reveal description');
                     }
                   }}
-                  disabled={!apiKey || !!revealedDescription}
+                  disabled={(!apiKey && !password) || !!revealedDescription}
                   className="w-full bg-gray-100 text-gray-700 p-3 rounded-lg hover:bg-gray-200 transition font-medium disabled:opacity-50"
                 >
                   View Resolution Criteria
