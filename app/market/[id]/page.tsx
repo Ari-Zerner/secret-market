@@ -343,34 +343,7 @@ export default function MarketPage() {
                           },
                           body: JSON.stringify({
                             contractId: market.id,
-                            content: {
-                              type: 'doc',
-                              content: [
-                                {
-                                  type: 'paragraph',
-                                  content: [
-                                    {
-                                      type: 'text',
-                                      marks: [
-                                        {
-                                          type: 'bold'
-                                        }
-                                      ],
-                                      text: 'Resolution Criteria'
-                                    }
-                                  ]
-                                },
-                                {
-                                  type: 'paragraph',
-                                  content: [
-                                    {
-                                      type: 'text',
-                                      text: revealedDescription
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
+                            html: `<p><strong>Resolution Criteria</strong></p><p>${revealedDescription}</p>`
                           })
                         });
 

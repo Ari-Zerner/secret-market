@@ -32,7 +32,7 @@ export default function Home() {
 
     try {
       // Generate hash of the description
-      const descriptionHash = CryptoJS.SHA256(description).toString();
+      const descriptionHash: string = CryptoJS.SHA256(description).toString();
 
       // Create market title with hash
       const marketTitle = `Secret Market ${descriptionHash.substring(0, 8)}`;
@@ -42,56 +42,20 @@ export default function Home() {
       const encryptedDescription = CryptoJS.AES.encrypt(description, encryptionKey).toString();
 
       // Create market description
-      const descriptionContent = [
-        {
-          type: 'paragraph',
-          content: [
-            {
-              type: 'text',
-              text: `The SHA256 hash of this market's resolution criteria is ${descriptionHash}.`
-            }
-          ]
-        }
-      ];
+      // Create market description HTML
+      let marketDescription = `<p><strong>SHA256 hash of Resolution Criteria</strong></p><p>${descriptionHash}</p>`;
 
       if (password) {
         // If using password, include the encrypted description in the market description
-        descriptionContent.push(
-          {
-            type: 'paragraph',
-            content: [
-              {
-                type: 'text',
-                text: 'Resolution criteria (AES encrypted): ' + encryptedDescription
-              }
-            ]
-          },
-          {
-            type: 'paragraph',
-            content: [
-              {
-                type: 'text',
-                text: 'To decrypt: Use CryptoJS.AES.decrypt(ciphertext, password).toString(CryptoJS.enc.Utf8)'
-              }
-            ]
-          }
-        );
+        marketDescription += `
+          <p></p>
+          <p><strong>AES with password</strong></p>
+          <p>${encryptedDescription}</p>
+          <p>To decrypt: Use CryptoJS.AES.decrypt(ciphertext, password).toString(CryptoJS.enc.Utf8)</p>
+        `;
       }
 
-      descriptionContent.push({
-        type: 'paragraph',
-        content: [
-          {
-            type: 'text',
-            text: `Created with ${window.location.origin}`
-          }
-        ]
-      });
-
-      const descriptionJson = JSON.stringify({
-        type: 'doc',
-        content: descriptionContent
-      });
+      marketDescription += `<p></p><p>Created with <a href="${window.location.origin}">Secret Market Creator</a></p>`;
 
       // Call Manifold API to create market
       const manifoldResponse = await fetch(`${MANIFOLD_API_BASE}/market`, {
@@ -103,7 +67,7 @@ export default function Home() {
         body: JSON.stringify({
           outcomeType: 'BINARY',
           question: marketTitle,
-          descriptionJson,
+          descriptionHtml: marketDescription,
           initialProb: 50,
           closeTime: new Date(closeTime).getTime(),
           visibility: 'unlisted'
