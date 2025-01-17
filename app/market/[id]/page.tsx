@@ -206,7 +206,7 @@ export default function MarketPage() {
                             setPassword(decryptedPassword);
                             setActionError('');
                           } catch (err) {
-                            setActionError('Failed to recover password with API key');
+                            setActionError(err instanceof Error ? err.message : 'Failed to recover password with API key');
                           }
                         }}
                         className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
