@@ -36,6 +36,10 @@ UI Guidelines:
 - Ensure error/success states are visible in both modes
 - Clear error messages when user takes corrective action
 - Avoid input defocusing: wrap inputs in <form> elements to preserve focus during state updates
+- For input fields with toggle buttons (e.g. show/hide password):
+  - Add `pr-16` padding to prevent text from overlapping with the button
+  - Position button absolutely within a relative container
+  - Use consistent button styling: `text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200`
 - When using localStorage in Next.js, check for window to prevent SSR issues:
   ```ts
   const [value] = useState(() => {
