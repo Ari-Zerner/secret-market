@@ -75,7 +75,8 @@ export default function Home() {
           initialProb: 50,
           closeTime: new Date(closeTime).getTime(),
           visibility: 'unlisted',
-          marketTier: marketTier
+          marketTier: marketTier,
+          groupIds: ['f4d33a6b-7558-4772-ab88-dd48c8bc3db0'] // Topic: Secret Market
         })
       });
 
