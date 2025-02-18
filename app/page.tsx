@@ -216,7 +216,7 @@ export default function Home() {
               <label className="block text-sm font-semibold mb-1.5">
                 Market Tier
                 <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
-                  (determines mana cost and rewards)
+                  (determines liquidity cost)
                 </span>
               </label>
               <select
@@ -305,7 +305,7 @@ export default function Home() {
               <li>Enter your market details and secret resolution criteria</li>
               <li>We create a hash of your resolution criteria</li>
               <li>A market is created on Manifold (with you as the creator) with the hash as proof</li>
-              <li>We store the resolution criteria securely, encrypted in-browser with your API key</li>
+              <li>We store the resolution criteria securely, encrypted in-browser with your chosen password</li>
               <li>When ready, you can reveal the criteria and resolve the market</li>
             </ol>
           </div>
