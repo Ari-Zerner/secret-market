@@ -5,6 +5,8 @@ export type ManifoldAPIError = {
   };
 };
 
+export type MarketTier = 'play' | 'plus' | 'premium' | 'crystal';
+
 export interface StoredMarket {
   id: string;              // Manifold market ID
   encryptedDescription: string;  // Description encrypted with user's API key or password

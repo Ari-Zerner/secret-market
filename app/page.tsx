@@ -5,6 +5,7 @@ import CryptoJS from 'crypto-js';
 import type { ManifoldAPIError } from '@/app/lib/db/types';
 import { useRouter } from 'next/navigation';
 import { APP_NAME, MANIFOLD_API_BASE } from './lib/constants';
+import type { MarketTier } from './lib/db/types';
 
 export default function Home() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [showPassword, setShowPassword] = useState(true);
+  const [marketTier, setMarketTier] = useState<MarketTier>('plus');
 
   const createMarket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +74,8 @@ export default function Home() {
           descriptionHtml: marketDescription,
           initialProb: 50,
           closeTime: new Date(closeTime).getTime(),
-          visibility: 'unlisted'
+          visibility: 'unlisted',
+          marketTier: marketTier
         })
       });
 
@@ -104,7 +107,8 @@ export default function Home() {
           id: market.id,
           encryptedDescription,
           descriptionHash,
-          encryptedPassword
+          encryptedPassword,
+          marketTier
         }),
       });
 
@@ -205,6 +209,25 @@ export default function Home() {
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1.5">
+                Market Tier
+                <span className="text-gray-600 dark:text-gray-400 ml-1 text-xs font-normal">
+                  (determines mana cost and rewards)
+                </span>
+              </label>
+              <select
+                value={marketTier}
+                onChange={(e) => setMarketTier(e.target.value as MarketTier)}
+                className="w-full p-3 border rounded-lg bg-white/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              >
+                <option value="play">Play</option>
+                <option value="plus">Plus</option>
+                <option value="premium">Premium</option>
+                <option value="crystal">Crystal</option>
+              </select>
             </div>
 
             <div>
